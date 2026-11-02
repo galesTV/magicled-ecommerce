@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoUsuario {
+  CLIENTE
+  ADMIN
+}
+
+enum StatusPedido {
+  PENDENTE
+  PAGO
+  EM_TRANSPORTE
+  ENTREGUE
+  CANCELADO
+}
+
+enum MetodoPagamento {
+  PIX
+  BOLETO
+  CARTAO_CREDITO
+}
+
+enum StatusPagamento {
+  PENDENTE
+  APROVADO
+  RECUSADO
+  ESTORNADO
+}
+
+model Usuario {
+  id           Int          @id @default(autoincrement())
+  nome         String       @db.VarChar(150)
+  email        String       @unique @db.VarChar(150)
+  senhaHash    String       @map("senha_hash") @db.VarChar(255)
+  tipoUsuario  TipoUsuario  @default(CLIENTE) @map("tipo_usuario")
+  dataCadastro DateTime     @default(now()) @map("data_cadastro")
+
+  cliente      Cliente?
+  admin        Administrador?
+
+  @@map("usuarios")
+}
+
+model Cliente {
+  usuarioId Int     @id @map("usuario_id")
+  cpf       String  @unique @db.VarChar(14)
+  telefone  String? @db.VarChar(20)
+
+  usuario   Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  enderecos Endereco[]
+  carrinho  Carrinho?
+  pedidos   Pedido[]
+
+  @@map("clientes")
+}
+
+model Administrador {
+  usuarioId   Int    @id @map("usuario_id")
+  nivelAcesso String @map("nivel_acesso") @db.VarChar(50)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("administradores")
+}
+
+model Endereco {
+  id          Int     @id @default(autoincrement())
+  clienteId   Int     @map("cliente_id")
+  cep         String  @db.VarChar(9)
+  logradouro  String  @db.VarChar(200)
+  numero      String  @db.VarChar(20)
+  complemento String? @db.VarChar(100)
+  bairro      String  @db.VarChar(100)
+  cidade      String  @db.VarChar(100)
+  estado      String  @db.Char(2)
+
+  cliente Cliente  @relation(fields: [clienteId], references: [usuarioId], onDelete: Cascade)
+  pedidos Pedido[]
+
+  @@map("enderecos")
+}
+
+model Categoria {
+  id       Int       @id @default(autoincrement())
+  nome     String    @db.VarChar(100)
+  produtos Produto[]
+
+  @@map("categorias")
+}
+
+model Produto {
+  id                   Int     @id @default(autoincrement())
+  categoriaId          Int     @map("categoria_id")
+  nome                 String  @db.VarChar(200)
+  descricao            String? @db.Text
+  especificacaoTecnica String? @map("especificacao_tecnica") @db.Text
+  preco                Decimal @db.Decimal(10, 2)
+  estoque              Int     @default(0)
+  status               Boolean @default(true)
+
+  categoria     Categoria      @relation(fields: [categoriaId], references: [id])
+  itensCarrinho ItemCarrinho[]
+  itensPedido   ItemPedido[]
+
+  @@map("produtos")
+}
+
+model Carrinho {
+  id          Int      @id @default(autoincrement())
+  clienteId   Int      @unique @map("cliente_id")
+  dataCriacao DateTime @default(now()) @map("data_criacao")
+
+  cliente Cliente        @relation(fields: [clienteId], references: [usuarioId], onDelete: Cascade)
+  itens   ItemCarrinho[]
+
+  @@map("carrinhos")
+}
+
+model ItemCarrinho {
+  id            Int     @id @default(autoincrement())
+  carrinhoId    Int     @map("carrinho_id")
+  produtoId     Int     @map("produto_id")
+  quantidade    Int
+  precoUnitario Decimal @map("preco_unitario") @db.Decimal(10, 2)
+
+  carrinho Carrinho @relation(fields: [carrinhoId], references: [id], onDelete: Cascade)
+  produto  Produto  @relation(fields: [produtoId], references: [id])
+
+  @@map("itens_carrinho")
+}
+
+model Pedido {
+  id             Int          @id @default(autoincrement())
+  clienteId      Int          @map("cliente_id")
+  enderecoId     Int          @map("endereco_id")
+  dataCriacao    DateTime     @default(now()) @map("data_criacao")
+  valorTotal     Decimal      @map("valor_total") @db.Decimal(10, 2)
+  status         StatusPedido @default(PENDENTE)
+  codigoRastreio String?      @map("codigo_rastreio") @db.VarChar(100)
+
+  cliente   Cliente      @relation(fields: [clienteId], references: [usuarioId])
+  endereco  Endereco     @relation(fields: [enderecoId], references: [id])
+  itens     ItemPedido[]
+  pagamento Pagamento?
+  frete     Frete?
+
+  @@map("pedidos")
+}
+
+model ItemPedido {
+  id            Int     @id @default(autoincrement())
+  pedidoId      Int     @map("pedido_id")
+  produtoId     Int     @map("produto_id")
+  quantidade    Int
+  precoUnitario Decimal @map("preco_unitario") @db.Decimal(10, 2)
+
+  pedido  Pedido  @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id])
+
+  @@map("itens_pedido")
+}
+
+model Pagamento {
+  id            Int             @id @default(autoincrement())
+  pedidoId      Int             @unique @map("pedido_id")
+  metodo        MetodoPagamento
+  valor         Decimal         @db.Decimal(10, 2)
+  status        StatusPagamento @default(PENDENTE)
+  dataPagamento DateTime?       @map("data_pagamento")
+
+  pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@map("pagamentos")
+}
+
+model Frete {
+  id         Int     @id @default(autoincrement())
+  pedidoId   Int     @unique @map("pedido_id")
+  cepDestino String  @map("cep_destino") @db.VarChar(9)
+  valor      Decimal @db.Decimal(10, 2)
+  prazoDias  Int     @map("prazo_dias")
+
+  pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@map("fretes")
+}
