@@ -3,14 +3,14 @@ import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({
-    example: 'Gael Guzman',
+    example: 'Teste da Silva',
     description: 'Nome completo do usuário',
   })
   @IsString()
   @IsNotEmpty()
   nome!: string;
 
-  @ApiProperty({ example: 'gael@email.com', description: 'E-mail para login' })
+  @ApiProperty({ example: 'teste@email.com', description: 'E-mail para login' })
   @IsEmail()
   @IsNotEmpty()
   email!: string;
