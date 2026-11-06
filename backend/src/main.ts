@@ -2,12 +2,23 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Habilita validação automática dos DTOs nas requisições
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   // Permite requisições vindo da aplicação React/Next.js
   app.enableCors();
@@ -32,4 +43,7 @@ async function bootstrap() {
     `📄 Documentação Swagger disponível em: http://localhost:${port}/api/docs`,
   );
 }
-bootstrap();
+
+void bootstrap().catch((err) => {
+  console.error('Erro ao inicializar a aplicação:', err);
+});
