@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @Injectable()
 export class OrdersService {
@@ -172,5 +173,28 @@ export class OrdersService {
     }
 
     return pedido;
+  }
+
+  async updateOrderStatusByAdmin(orderId: number, dto: UpdateOrderStatusDto) {
+    const pedido = await this.prisma.pedido.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!pedido) {
+      throw new NotFoundException('Pedido não encontrado.');
+    }
+
+    return this.prisma.pedido.update({
+      where: { id: orderId },
+      data: {
+        status: dto.status,
+        ...(dto.codigoRastreio ? { codigoRastreio: dto.codigoRastreio } : {}),
+      },
+      include: {
+        itens: { include: { produto: true } },
+        endereco: true,
+        pagamento: true,
+      },
+    });
   }
 }

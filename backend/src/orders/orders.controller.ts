@@ -4,14 +4,17 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @ApiTags('Pedidos (RF07)')
 @Controller('orders')
@@ -42,5 +45,17 @@ export class OrdersController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.ordersService.findOrderById(req.user.id, id);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(AdminGuard)
+  @ApiOperation({
+    summary: '[ADMIN] Atualizar status do pedido e cadastrar rastreio',
+  })
+  updateOrderStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateOrderStatusDto,
+  ) {
+    return this.ordersService.updateOrderStatusByAdmin(id, dto);
   }
 }
