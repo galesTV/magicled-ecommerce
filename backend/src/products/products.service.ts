@@ -23,6 +23,7 @@ export class ProductsService {
         especificacaoTecnica: dto.especificacaoTecnica,
         preco: dto.preco,
         estoque: dto.estoque,
+        imagemUrl: dto.imagemUrl,
         status: dto.status ?? true,
       },
     });
