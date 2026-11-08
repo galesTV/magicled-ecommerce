@@ -101,6 +101,7 @@ model Produto {
   especificacaoTecnica String? @map("especificacao_tecnica") @db.Text
   preco                Decimal @db.Decimal(10, 2)
   estoque              Int     @default(0)
+  imagemUrl            String? @map("imagem_url") @db.VarChar(500)
   status               Boolean @default(true)
 
   categoria     Categoria      @relation(fields: [categoriaId], references: [id])

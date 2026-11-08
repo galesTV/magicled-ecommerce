@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUrl,
   Min,
 } from 'class-validator';
 
@@ -43,6 +44,14 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   estoque!: number;
+
+  @ApiPropertyOptional({
+    example: 'https://exemplo.com/imagens/fita-led-rgb.jpg',
+    description: 'URL da imagem do produto',
+  })
+  @IsUrl()
+  @IsOptional()
+  imagemUrl?: string;
 
   @ApiPropertyOptional({ example: true, default: true })
   @IsBoolean()
