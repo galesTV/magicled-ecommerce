@@ -1,0 +1,32 @@
+{
+  "name": "magicled-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1 --port 3001",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1 --port 3001",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,mjs}\" \"scripts/*.mjs\" playwright.config.ts next.config.ts",
+    "test:e2e": "node scripts/run-v3-e2e.mjs",
+    "test:e2e:api-fixture": "node scripts/run-v3-e2e.mjs --api-fixture",
+    "test:e2e:real": "node --test --test-reporter=spec tests/v3/real-integration.cjs",
+    "test:e2e:v2": "node scripts/run-e2e.mjs"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prettier": "^3.10.1",
+    "typescript": "^5.9.3"
+  }
+}
